@@ -30,8 +30,6 @@ export default class UserController{
             const userDoc=await RepositoryUser.registerUser(user);
             console.log("userDoc: ");
             console.log(userDoc);
-            const query = `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`;
-            await mysqlPool.execute(query, [name, email, hashPassword]);
             const token=jwt.sign({id:userDoc._id,email:userDoc.email},process.env.JWT_SECRET)
             res.json({success:true,token});
         }catch(err){
