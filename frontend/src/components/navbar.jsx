@@ -2,15 +2,15 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { assets } from "../assets/allAssets.js";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
-import { FaHospital } from 'react-icons/fa'; // FontAwesome hospital icon
+import { FaHospital } from 'react-icons/fa';
 
 const Navbar = () => {
     const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const { aToken, setAToken, userData } = useContext(AppContext);
     const [showDropdownList, setShowDropdownList] = useState(false);
-    const dropdownRef = useRef(null); // reference for dropdown
-    const adminPanelURL = "https://adminpanelarhosital.netlify.app/";
+    const dropdownRef = useRef(null);
+    const adminPanelURL = "https://adminpanelarhospitalar.netlify.app/";
 
     const logOut = () => {
         localStorage.removeItem("token");
@@ -18,7 +18,7 @@ const Navbar = () => {
         setShowDropdownList(false);
     };
 
-    // 🧠 Hide dropdown when clicking outside
+    // Hide dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -29,14 +29,28 @@ const Navbar = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (showMenu) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showMenu]);
+
     return (
         <div className="flex items-center justify-between text-base py-4 mb-5 border-b border-b-gray-400 relative">
- <div className="flex items-center">
-      <FaHospital className="text-blue-600 w-10 h-10" /> {/* size 40px */}
-      <span className="ml-2 font-bold text-2xl text-blue-900">
-        ARHospital
-      </span>
-    </div>
+            <div className="flex items-center">
+                <FaHospital className="text-blue-600 w-10 h-10" />
+                <span className="ml-2 font-bold text-2xl text-blue-900">
+                    ARHospital
+                </span>
+            </div>
+            
             {/* Desktop Menu */}
             <ul className="hidden md:flex items-start font-semibold gap-5">
                 <NavLink to="/"><li className="py-1">HOME</li></NavLink>
@@ -73,13 +87,13 @@ const Navbar = () => {
 
                         {/* Dropdown List */}
                         {showDropdownList && (
-                            <div className="absolute right-0 mt-2 w-48 bg-stone-100 rounded-lg shadow-lg z-50 p-4 flex flex-col gap-3 text-gray-700 font-medium">
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 p-4 flex flex-col gap-3 text-gray-700 font-medium border border-gray-200">
                                 <p
                                     onClick={() => {
                                         navigate("/myProfile");
                                         setShowDropdownList(false);
                                     }}
-                                    className="hover:text-black cursor-pointer"
+                                    className="hover:text-black cursor-pointer py-1"
                                 >
                                     My Profile
                                 </p>
@@ -88,13 +102,13 @@ const Navbar = () => {
                                         navigate("/myAppointments");
                                         setShowDropdownList(false);
                                     }}
-                                    className="hover:text-black cursor-pointer"
+                                    className="hover:text-black cursor-pointer py-1"
                                 >
                                     My Appointments
                                 </p>
                                 <p
                                     onClick={logOut}
-                                    className="hover:text-black cursor-pointer"
+                                    className="hover:text-black cursor-pointer py-1"
                                 >
                                     Logout
                                 </p>
@@ -103,12 +117,11 @@ const Navbar = () => {
                     </div>
                 ) : (
                     <button
-                    onClick={() => navigate("/login")}
-                    className="text-sm bg-blue-500 text-white rounded-full px-8 py-3 m-auto cursor-pointer hidden lg:block hover:bg-blue-600 transition-all"
+                        onClick={() => navigate("/login")}
+                        className="text-sm bg-blue-500 text-white rounded-full px-8 py-3 m-auto cursor-pointer hidden lg:block hover:bg-blue-600 transition-all"
                     >
-                    Create account
+                        Create account
                     </button>
-
                 )}
 
                 {/* Mobile Menu Icon */}
@@ -119,70 +132,117 @@ const Navbar = () => {
                     alt="menu"
                 />
 
-                {/* Mobile Sidebar Menu */}
+                {/* Mobile Sidebar Menu - Fixed with higher z-index and proper overlay */}
                 <div
-                    className={`${showMenu ? "fixed w-full" : "h-0 w-0"} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}
+                    className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
+                        showMenu ? 'translate-x-0' : 'translate-x-full'
+                    } md:hidden`}
                 >
-                    <div className="flex items-center justify-between px-5 py-6">
-                       <span className="ml-2 font-bold text-2xl text-blue-900">
-                       ARHospital
-                       </span>
-                        <img
-                            className="w-7 cursor-pointer"
+                    {/* Backdrop */}
+                    {showMenu && (
+                        <div 
+                            className="absolute inset-0 bg-black bg-opacity-50"
                             onClick={() => setShowMenu(false)}
-                            src={assets.cross_icon}
-                            alt="close"
-                        />
+                        ></div>
+                    )}
+                    
+                    {/* Sidebar Content */}
+                    <div className="absolute right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white shadow-xl overflow-y-auto">
+                        <div className="flex items-center justify-between px-5 py-6 border-b border-gray-200">
+                            <span className="font-bold text-2xl text-blue-900">
+                                ARHospital
+                            </span>
+                            <img
+                                className="w-7 cursor-pointer"
+                                onClick={() => setShowMenu(false)}
+                                src={assets.cross_icon}
+                                alt="close"
+                            />
+                        </div>
+
+                        <ul className="flex flex-col items-center gap-6 mt-8 px-5 text-lg font-medium">
+                            <NavLink 
+                                onClick={() => setShowMenu(false)} 
+                                to="/"
+                                className="w-full text-center py-2 hover:text-blue-600 transition-colors"
+                            >
+                                HOME
+                            </NavLink>
+                            <NavLink 
+                                onClick={() => setShowMenu(false)} 
+                                to="/doctors"
+                                className="w-full text-center py-2 hover:text-blue-600 transition-colors"
+                            >
+                                ALL DOCTORS
+                            </NavLink>
+                            <NavLink 
+                                onClick={() => setShowMenu(false)} 
+                                to="/about"
+                                className="w-full text-center py-2 hover:text-blue-600 transition-colors"
+                            >
+                                ABOUT
+                            </NavLink>
+                            <NavLink 
+                                onClick={() => setShowMenu(false)} 
+                                to="/contact"
+                                className="w-full text-center py-2 hover:text-blue-600 transition-colors"
+                            >
+                                CONTACT
+                            </NavLink>
+
+                            <button
+                                onClick={() => {
+                                    window.open(adminPanelURL, "_blank");
+                                    setShowMenu(false);
+                                }}
+                                className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-all w-full max-w-xs"
+                            >
+                                Admin Panel
+                            </button>
+
+                            {aToken ? (
+                                <div className="mt-4 w-full flex flex-col items-center gap-4 border-t border-gray-200 pt-6">
+                                    <p
+                                        onClick={() => {
+                                            navigate("/myProfile");
+                                            setShowMenu(false);
+                                        }}
+                                        className="hover:text-blue-600 cursor-pointer py-2 w-full text-center"
+                                    >
+                                        My Profile
+                                    </p>
+                                    <p
+                                        onClick={() => {
+                                            navigate("/myAppointments");
+                                            setShowMenu(false);
+                                        }}
+                                        className="hover:text-blue-600 cursor-pointer py-2 w-full text-center"
+                                    >
+                                        My Appointments
+                                    </p>
+                                    <p
+                                        onClick={() => {
+                                            logOut();
+                                            setShowMenu(false);
+                                        }}
+                                        className="hover:text-blue-600 cursor-pointer py-2 w-full text-center"
+                                    >
+                                        Logout
+                                    </p>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        navigate("/login");
+                                        setShowMenu(false);
+                                    }}
+                                    className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-all w-full max-w-xs mt-4"
+                                >
+                                    Create account
+                                </button>
+                            )}
+                        </ul>
                     </div>
-
-                    <ul className="flex flex-col items-center gap-4 mt-5 px-5 text-lg font-medium">
-                        <NavLink onClick={() => setShowMenu(false)} to="/">HOME</NavLink>
-                        <NavLink onClick={() => setShowMenu(false)} to="/doctors">ALL DOCTORS</NavLink>
-                        <NavLink onClick={() => setShowMenu(false)} to="/about">ABOUT</NavLink>
-                        <NavLink onClick={() => setShowMenu(false)} to="/contact">CONTACT</NavLink>
-
-                        <button
-                            onClick={() => {
-                                window.open(adminPanelURL, "_blank");
-                                setShowMenu(false);
-                            }}
-                            className="bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600 transition-all"
-                        >
-                            Admin Panel
-                        </button>
-
-                        {aToken && (
-                            <div className="mt-4 w-full flex flex-col items-center gap-3">
-                                <p
-                                    onClick={() => {
-                                        navigate("/myProfile");
-                                        setShowMenu(false);
-                                    }}
-                                    className="hover:text-blue-600 cursor-pointer"
-                                >
-                                    My Profile
-                                </p>
-                                <p
-                                    onClick={() => {
-                                        navigate("/myAppointments");
-                                        setShowMenu(false);
-                                    }}
-                                    className="hover:text-blue-600 cursor-pointer"
-                                >
-                                    My Appointments
-                                </p>
-                                <p
-                                    onClick={() => {
-                                        logOut();
-                                        setShowMenu(false);
-                                    }}
-                                    className="hover:text-blue-600 cursor-pointer"
-                                >
-                                    Logout
-                                </p>
-                            </div>
-                        )}
-                    </ul>
                 </div>
             </div>
         </div>
