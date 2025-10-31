@@ -9,7 +9,7 @@ const DoctorContextProvider=(props)=>{
     const [profileData,setProfileData]=useState(false);
     const getAppointments=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/doctor/doctor-appointments",{headers:{dToken}});
+            const {data}=await axios.get("https://arhospital.onrender.com/api/doctor/doctor-appointments",{headers:{dToken}});
             if(data.success){
                 setAppointments(data.allAppointments);
                 console.log(data.allAppointments);
@@ -22,7 +22,7 @@ const DoctorContextProvider=(props)=>{
     }
     const completeAppointment=async(appointmentId)=>{
         try{
-            const {data}=await axios.post("http://localhost:4000/api/doctor/complete-appointment",{appointmentId},{headers:{dToken}});
+            const {data}=await axios.post("https://arhospital.onrender.com/api/doctor/complete-appointment",{appointmentId},{headers:{dToken}});
             if(data.success){
                 toast.success(data.message);
                 getAppointments();
@@ -35,7 +35,7 @@ const DoctorContextProvider=(props)=>{
     }
     const cancelAppointment=async(appointmentId)=>{
         try{
-            const {data}=await axios.post("http://localhost:4000/api/doctor/cancel-appointment",{appointmentId},{headers:{dToken}});
+            const {data}=await axios.post("https://arhospital.onrender.com/api/doctor/cancel-appointment",{appointmentId},{headers:{dToken}});
             if(data.success){
                 toast.success(data.message);
                 getAppointments();
@@ -48,7 +48,7 @@ const DoctorContextProvider=(props)=>{
     }
     const doctorDashboard=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/doctor/dashboard-doctor",{headers:{dToken}});
+            const {data}=await axios.get("https://arhospital.onrender.com/api/doctor/dashboard-doctor",{headers:{dToken}});
             if(data.success){
                 setDashData(data.dashboardData);
                 console.log(data.dashboardData);
@@ -61,7 +61,7 @@ const DoctorContextProvider=(props)=>{
     }
     const doctorProfile=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/doctor/profile",{headers:{dToken}});
+            const {data}=await axios.get("https://arhospital.onrender.com/api/doctor/profile",{headers:{dToken}});
             if(data.success){
                 setProfileData(data.doctorData);
                 console.log(data.doctorData);

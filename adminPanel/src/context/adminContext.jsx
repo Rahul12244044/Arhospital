@@ -10,7 +10,7 @@ const AdminContextProvider=(props)=>{
     const backendUrl=import.meta.env.VITE_BACKEND_URL
     const getAllDoctors=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/admin/all-doctors",{headers:{aToken}});
+            const {data}=await axios.get("https://arhospital.onrender.com/api/admin/all-doctors",{headers:{aToken}});
             console.log("all doctors in the data: ");
             console.log(data);
             if(data.success){
@@ -24,7 +24,7 @@ const AdminContextProvider=(props)=>{
     }
     const changeAvailability=async (docId)=>{
         try{
-            const {data}=await axios.post("http://localhost:4000/api/admin/change-availability",{docId},{headers:{aToken}});
+            const {data}=await axios.post(" https://arhospital.onrender.com/api/admin/change-availability",{docId},{headers:{aToken}});
             console.log("changeAvailabilty@@@@@@@@@@@@@@@@@@@");
             console.log(data);
             if(data.success){
@@ -39,7 +39,7 @@ const AdminContextProvider=(props)=>{
     }
     const getAllAppointment=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/admin/appointments",{headers:{aToken}});
+            const {data}=await axios.get(" https://arhospital.onrender.com/api/admin/appointments",{headers:{aToken}});
             if(data.success){
                 setAppointments(data.allAppointments);
                 console.log("All appointments: ");
@@ -53,7 +53,7 @@ const AdminContextProvider=(props)=>{
     }
     const adminCancelAppointment=async (appointmentId)=>{
         try{
-            const {data}=await axios.post("http://localhost:4000/api/admin/cancel-appointment",{appointmentId},{headers:{aToken}});
+            const {data}=await axios.post(" https://arhospital.onrender.com/admin/cancel-appointment",{appointmentId},{headers:{aToken}});
             if(data.success){
                 toast.success(data.message);
             }else{
@@ -66,7 +66,7 @@ const AdminContextProvider=(props)=>{
     }
     const getDashData=async ()=>{
         try{
-            const {data}=await axios.get("http://localhost:4000/api/admin/dashboard",{headers:{aToken}});
+            const {data}=await axios.get(" https://arhospital.onrender.com/api/admin/dashboard",{headers:{aToken}});
             if(data.success){
                 setDashData(data.dashData);
                 console.log(data.dashData);
