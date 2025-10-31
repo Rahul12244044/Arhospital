@@ -17,7 +17,7 @@ const MyProfile = () => {
             formData.append("gender",userData.gender);
             formData.append("dob",userData.dob);
             image && formData.append("image",image);
-            const {data}=await axios.post("http://localhost:4000/api/user/update-profile",formData,{headers:{token:aToken}});
+            const {data}=await axios.post("https://arhospital.onrender.com/api/user/update-profile",formData,{headers:{token:aToken}});
             if(data.success){
                 toast.success(data.message);
                 loadUserData();

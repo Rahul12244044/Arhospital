@@ -37,7 +37,7 @@ const PaymentModal = ({ appointment, onSuccess, onClose, aToken }) => {
             };
 
             const { data } = await axios.post(
-                'http://localhost:4000/api/user/process-payment',
+                'https://arhospital.onrender.com/api/user/process-payment',
                 paymentData,
                 { 
                     headers: { token: aToken },

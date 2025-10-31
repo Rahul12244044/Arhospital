@@ -10,7 +10,7 @@ const Navbar = () => {
     const { aToken, setAToken, userData } = useContext(AppContext);
     const [showDropdownList, setShowDropdownList] = useState(false);
     const dropdownRef = useRef(null); // reference for dropdown
-    const adminPanelURL = "https://adminpanelarhospitalar.netlify.app/";
+    const adminPanelURL = "https://adminpanelarhosital.netlify.app/";
 
     const logOut = () => {
         localStorage.removeItem("token");

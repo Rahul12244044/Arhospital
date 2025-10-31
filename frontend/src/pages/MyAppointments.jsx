@@ -25,7 +25,7 @@ const MyAppointments = () => {
 
     const cancelAppointment = async (appointmentId) => {
         try {
-            const { data } = await axios.post("http://localhost:4000/api/user/cancel-appointment", { appointmentId }, { headers: { token: aToken } });
+            const { data } = await axios.post("https://arhospital.onrender.com/api/user/cancel-appointment", { appointmentId }, { headers: { token: aToken } });
             if (data.success) {
                 toast.success(data.message);
                 getUserAppointments();
@@ -61,7 +61,7 @@ const MyAppointments = () => {
     const getUserAppointments = async () => {
     try {
         console.log('Fetching appointments...');
-        const { data } = await axios.get("http://localhost:4000/api/user/appointments", { 
+        const { data } = await axios.get("https://arhospital.onrender.com/api/user/appointments", { 
             headers: { token: aToken } 
         });
         if (data.success) {

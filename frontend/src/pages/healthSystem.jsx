@@ -31,7 +31,7 @@ const HealthMonitor = () => {
         try {
            
             const { data } = await axios.get(
-                `http://localhost:4000/api/user/appointment/${currentAppointment._id}`,
+                `https://arhospital.onrender.com/api/user/appointment/${currentAppointment._id}`,
                 { headers: { token: aToken } }
             );
             

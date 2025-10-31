@@ -14,7 +14,7 @@ const Login = () => {
         event.preventDefault();
         try{
         if(state==="sign up"){
-            const {data}=await axios.post("http://localhost:4000/api/user/register",{name,email,password});
+            const {data}=await axios.post("https://arhospital.onrender.com/api/user/register",{name,email,password});
             if(data.success){
                 localStorage.setItem("token",data.token);
                 setAToken(data.token);
@@ -23,7 +23,7 @@ const Login = () => {
                 toast.error(data.message);
             }
         }else{
-             const {data}=await axios.post("http://localhost:4000/api/user/login",{email,password});
+             const {data}=await axios.post("https://arhospital.onrender.com/api/user/login",{email,password});
             if(data.success){
                 localStorage.setItem("token",data.token);
                 setAToken(data.token);
