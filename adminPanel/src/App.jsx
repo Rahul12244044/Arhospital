@@ -19,7 +19,7 @@ const App=()=>{
   const {dToken}=useContext(DoctorContext);
   console.log("aToken: ");
   console.log(aToken);
-  return (
+  return aToken || dToken?(
     <>
     <div className="bg-[#F8F9FD]">
     <ToastContainer position="top-right" autoClose={3000} />
@@ -38,6 +38,11 @@ const App=()=>{
       </Routes>
     </div>
     </div>
+    </>
+  ):(
+    <>
+    <Login/>
+    <ToastContainer position="top-right" autoClose={3000} />
     </>
   )
 }
