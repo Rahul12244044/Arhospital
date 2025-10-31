@@ -397,7 +397,7 @@ const HealthMonitor = () => {
                         </p>
                         {!currentAppointment?.paid && !currentAppointment?.cancelled && (
                             <button 
-                                onClick={() => navigate('/my-appointments')}
+                                onClick={() => navigate('/myAppointments')}
                                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
                             >
                                 Pay Now
