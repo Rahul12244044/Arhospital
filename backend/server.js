@@ -20,6 +20,7 @@ app.use("/api/doctor",routerDoctor);
 app.use("/api/user",routerUser);
 app.use((err,req,res,next)=>{
     console.log("Error in the err:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ");
+    console.log(err);
     
         return res.json({success:false,message:err.message});
    

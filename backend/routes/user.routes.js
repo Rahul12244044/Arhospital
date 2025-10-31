@@ -11,4 +11,7 @@ routerUser.post("/update-profile",uploads.single("image"),userAuth,userControlle
 routerUser.post("/book-appointment",userAuth,userController.bookAppointment);
 routerUser.get("/appointments",userAuth,userController.listAppointments);
 routerUser.post("/cancel-appointment",userAuth,userController.cancelAppointment);
+routerUser.get('/appointment/:appointmentId', userController.appointmentById);
+routerUser.post('/process-payment', userController.paymentAppointment);
+routerUser.post('/payment-appointment', userController.proccesPayment);
 export default routerUser;

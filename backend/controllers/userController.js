@@ -102,6 +102,8 @@ export default class UserController{
                 slots_booked[slotDate].push(slotTime);
             }
             const userData=await userModel.findById(id).select("-password");
+            console.log("userData: ");
+            console.log(userData);
             delete doctData.slots_booked;
             const appointmentData={
                 userId:id,
@@ -157,4 +159,113 @@ export default class UserController{
             next(err);
         }
     }
+  paymentAppointment = async (req, res, next) => {
+    try {
+        const { appointmentId, gpayId, amount, paymentMethod } = req.body;
+        
+        // Validate required fields
+        if (!appointmentId || !gpayId) {
+            return res.json({
+                success: false,
+                message: 'Appointment ID and GPay ID are required'
+            });
+        }
+
+        // Find the appointment
+        const appointment = await appointmentModel.findById(appointmentId);
+        if (!appointment) {
+            return res.json({
+                success: false,
+                message: 'Appointment not found'
+            });
+        }
+
+        // Check if appointment is already paid
+        if (appointment.paid || appointment.payment) {
+            return res.json({
+                success: false,
+                message: 'Payment already completed for this appointment'
+            });
+        }
+
+        // Check if appointment is cancelled
+        if (appointment.cancelled) {
+            return res.json({
+                success: false,
+                message: 'Cannot process payment for cancelled appointment'
+            });
+        }
+
+        // Update appointment with payment details - UPDATE BOTH FIELDS
+        const updatedAppointment = await appointmentModel.findByIdAndUpdate(
+            appointmentId,
+            { 
+                paid: true,           // New field
+                payment: true,        // Your existing field
+                paymentMethod: paymentMethod || 'gpay',
+                paymentId: `TXN${Date.now()}`,
+                paymentDate: new Date(),
+                gpayId: gpayId,
+                amount: amount || 500,
+                status: 'paid'
+            },
+            { new: true }
+        ).populate('docData');
+
+        console.log('Payment successful - Updated appointment:', {
+            id: updatedAppointment._id,
+            paid: updatedAppointment.paid,
+            payment: updatedAppointment.payment,
+            status: updatedAppointment.status
+        });
+
+        res.json({
+            success: true,
+            message: 'Payment processed successfully',
+            appointment: updatedAppointment
+        });
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        next(error);
+    }
+}
+
+// Use the same function for both endpoints to avoid duplication
+proccesPayment = async (req, res, next) => {
+    await this.paymentAppointment(req, res, next);
+}
+
+appointmentById = async (req, res, next) => {
+    try {
+        const { appointmentId } = req.params;
+        
+        const appointment = await appointmentModel.findById(appointmentId)
+            .populate('docData')
+            .populate('userId', 'name email');
+            
+        if (!appointment) {
+            return res.json({
+                success: false,
+                message: 'Appointment not found'
+            });
+        }
+
+        console.log('Fetched appointment:', {
+            id: appointment._id,
+            paid: appointment.paid,
+            payment: appointment.payment,
+            status: appointment.status
+        });
+
+        res.json({
+            success: true,
+            appointment: appointment
+        });
+        
+    } catch (error) {
+        console.error('Error fetching appointment:', error);
+        next(error);
+    }
+}
 }
