@@ -14,7 +14,7 @@ const Login=()=>{
         try{
             console.log("backendUrl: "+backendUrl);
             if(state==="Admin"){
-                const {data}=await axios.post("http://localhost:4000/api/admin/login",{email,password});
+                const {data}=await axios.post("https://arhospital.onrender.com/api/admin/login",{email,password});
                 console.log("data: ");
                 console.log(data);
                 if(data.success){
@@ -25,7 +25,7 @@ const Login=()=>{
                     return;
                 }
             }else{
-                const {data}=await axios.post("http://localhost:4000/api/doctor/login",{email,password});
+                const {data}=await axios.post("https://arhospital.onrender.com/api/doctor/login",{email,password});
                 if(data.success){
                     localStorage.setItem("dToken",data.token);
                     setdToken(data.token);
