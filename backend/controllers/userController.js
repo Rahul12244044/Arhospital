@@ -8,6 +8,8 @@ import {appointmentModel} from "../models/appointment.model.js";
 export default class UserController{
     registerUser=async (req,res,next)=>{
         try{
+            console.log("req.body: ");
+            console.log(req.body);
             const {name,email,password}=req.body;
             if(!name || !email || !password){
                 return res.json({success:false,message:"Missing Details."});
@@ -16,6 +18,8 @@ export default class UserController{
                 return res.json({success:false,mesage:"enter strong password."});
             }
             const isUserFound=await RepositoryUser.findUserEmail(email);
+            console.log("isUserFound: ");
+            console.log(isUserFound);
             if(isUserFound){
                 return res.json({success:false,message:"Email is already registered."});
             }
