@@ -52,20 +52,25 @@ export default class DoctorController{
         }
     }
     appointmentComplete=async (req,res,next)=>{
-        try{
-            const {id}=req.doctor;
-            const {appointmentId}=req.body;
-            const appointmentData=await appointmentModel.findById(appointmentId);
-            if(appointmentData && appointmentData.docId==id){
-                await appointmentModel.findByIdAndUpdate(appointmentId,{isCompleted:true});
-                res.json({success:true,message:"Appointment Completed."});
-            }else{
-                res.json({success:false,message:"Mark Failed."});
-            }
-        }catch(err){
-            next(err);
+    try{
+        const {id}=req.doctor;
+        const {appointmentId}=req.body;
+        const appointmentData=await appointmentModel.findById(appointmentId);
+        if(appointmentData && appointmentData.docId==id){
+            // Mark as completed and also ensure payment is marked as paid
+            await appointmentModel.findByIdAndUpdate(appointmentId,{
+                isCompleted: true,
+                paid: true, // Ensure payment is marked as completed
+                payment: true // Keep the existing field for backward compatibility
+            });
+            res.json({success:true,message:"Appointment Completed."});
+        }else{
+            res.json({success:false,message:"Mark Failed."});
         }
+    }catch(err){
+        next(err);
     }
+}
     appointmentCancel=async (req,res,next)=>{
         try{
             const {id}=req.doctor;

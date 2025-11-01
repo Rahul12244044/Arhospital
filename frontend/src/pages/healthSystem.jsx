@@ -11,8 +11,6 @@ const HealthMonitor = () => {
     
     const [currentAppointment, setCurrentAppointment] = useState(appointment);
     const [currentStatus, setCurrentStatus] = useState(getInitialStatus(appointment));
-    const [loading, setLoading] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
 
     // Determine initial status based on appointment data
     function getInitialStatus(apt) {
@@ -25,49 +23,30 @@ const HealthMonitor = () => {
     }
 
     // Fetch updated appointment data
-    const fetchAppointmentData = async (showToast = false) => {
+    const fetchAppointmentData = async () => {
         if (!currentAppointment?._id || !aToken) return;
         
         try {
             const { data } = await axios.get(
-                `https://arhospital.onrender.com/api/user/appointment/${currentAppointment._id}`,
+                `http://localhost:4000/api/user/appointment/${currentAppointment._id}`,
                 { headers: { token: aToken } }
             );
             
             if (data.success && data.appointment) {
                 setCurrentAppointment(data.appointment);
                 setCurrentStatus(getInitialStatus(data.appointment));
-                if (showToast) {
-                    toast.success('Appointment status updated!');
-                }
             }
         } catch (error) {
             console.error('Error fetching appointment:', error);
-            if (showToast) {
-                toast.error('Failed to fetch appointment details');
-            }
-        } finally {
-            setRefreshing(false);
         }
     };
 
-    // Refresh data when component mounts
+    // Fetch data when component mounts
     useEffect(() => {
         if (currentAppointment?._id) {
             fetchAppointmentData();
         }
     }, [currentAppointment?._id]);
-
-    // Auto-refresh data every 10 seconds for real-time updates
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (currentAppointment?._id && !['completed', 'cancelled'].includes(currentStatus)) {
-                fetchAppointmentData();
-            }
-        }, 10000);
-
-        return () => clearInterval(interval);
-    }, [currentAppointment?._id, currentStatus]);
 
     // Define the stages based on appointment status
     const getStages = () => {
@@ -99,6 +78,7 @@ const HealthMonitor = () => {
                 if (currentStatus === 'booked') {
                     return { ...stage, status: 'current' };
                 }
+                return { ...stage, status: 'pending' };
             }
             
             // Stage 3 - Medicine Point
@@ -109,6 +89,7 @@ const HealthMonitor = () => {
                 if (currentStatus === 'paid') {
                     return { ...stage, status: 'current' };
                 }
+                return { ...stage, status: 'pending' };
             }
             
             // Stage 4 - Complete Appointment
@@ -119,6 +100,7 @@ const HealthMonitor = () => {
                 if (currentStatus === 'medicine') {
                     return { ...stage, status: 'current' };
                 }
+                return { ...stage, status: 'pending' };
             }
             
             return stage;
@@ -157,34 +139,6 @@ const HealthMonitor = () => {
         }
     };
 
-    const getConnectorStyles = (stage, index, stages) => {
-        if (index === stages.length - 1) return 'hidden';
-        
-        const baseStyles = "absolute top-4 md:top-6 left-1/2 w-full h-1 md:h-2 z-10 transform -translate-y-1/2";
-        
-        // For cancelled state, show red line only for the first stage connector
-        if (stage.status === 'cancelled' && index === 0) {
-            return `${baseStyles} bg-red-500`;
-        }
-        
-        // For completed stages, show green line to the next stage
-        if (stage.status === 'completed') {
-            return `${baseStyles} bg-green-500`;
-        }
-        
-        // For current stage, show gradient from green to gray
-        if (stage.status === 'current') {
-            return `${baseStyles} bg-gradient-to-r from-green-500 to-gray-300`;
-        }
-        
-        // For pending stages after completed ones, show green line if previous was completed
-        if (index > 0 && stages[index - 1].status === 'completed') {
-            return `${baseStyles} bg-green-500`;
-        }
-        
-        return `${baseStyles} bg-gray-300`;
-    };
-
     const getStageDate = (stageId) => {
         if (!currentAppointment) return '';
         
@@ -197,16 +151,36 @@ const HealthMonitor = () => {
         switch(stageId) {
             case 1:
                 return currentAppointment.createdAt ? 
-                    new Date(currentAppointment.createdAt).toLocaleDateString() : 
+                    new Date(currentAppointment.createdAt).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 
                     currentAppointment.slotDate || now;
             case 2:
                 return currentAppointment.paymentDate ? 
-                    new Date(currentAppointment.paymentDate).toLocaleDateString() : 
+                    new Date(currentAppointment.paymentDate).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 
                     (currentAppointment.paid ? 'Completed' : 'Pending');
             case 3:
-                return currentAppointment.medicineDate || 'Pending';
+                return currentAppointment.medicineDate ? 
+                    new Date(currentAppointment.medicineDate).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 
+                    (currentStatus === 'medicine' || currentStatus === 'completed' ? 'Completed' : 'Pending');
             case 4:
-                return currentAppointment.completionDate || 'Pending';
+                return currentAppointment.completionDate ? 
+                    new Date(currentAppointment.completionDate).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 
+                    (currentStatus === 'completed' ? 'Completed' : 'Pending');
             default:
                 return '';
         }
@@ -223,11 +197,11 @@ const HealthMonitor = () => {
             case 3:
                 return currentStatus === 'medicine' || currentStatus === 'completed' ?
                     'Medicines prescribed by doctor' :
-                    'Doctor will prescribe medicines';
+                    'Doctor will prescribe medicines after consultation';
             case 4:
                 return currentStatus === 'completed' ?
                     'Appointment completed successfully' :
-                    'Final stage after medicine';
+                    'Final stage after medicine prescription';
             default:
                 return '';
         }
@@ -262,7 +236,7 @@ const HealthMonitor = () => {
                         <h1 className="text-xl md:text-3xl font-bold text-gray-800">Appointment Tracker</h1>
                         <p className="text-gray-600 mt-1 md:mt-2 text-sm md:text-base">Track your appointment progress</p>
                     </div>
-                    <div className="flex justify-center md:justify-end gap-2">
+                    <div className="flex justify-center md:justify-end">
                         <button 
                             onClick={handleBackToAppointments}
                             className="bg-white text-gray-700 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm"
@@ -270,20 +244,10 @@ const HealthMonitor = () => {
                             <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            Back
+                            Back to Appointments
                         </button>
                     </div>
                 </div>
-
-                {/* Loading State */}
-                {refreshing && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="animate-spin rounded-full h-4 w-4 md:h-6 md:w-6 border-b-2 border-blue-600"></div>
-                            <p className="text-blue-700 text-sm md:text-base">Updating appointment status...</p>
-                        </div>
-                    </div>
-                )}
 
                 {/* Appointment Info Card */}
                 <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6">
@@ -292,7 +256,7 @@ const HealthMonitor = () => {
                             <img 
                                 src={currentAppointment.docData?.image || '/default-doctor.png'} 
                                 alt="Doctor" 
-                                className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover"
+                                className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-blue-200"
                                 onError={(e) => {
                                     e.target.src = 'https://via.placeholder.com/64?text=DR';
                                 }}
@@ -337,16 +301,16 @@ const HealthMonitor = () => {
                     </div>
 
                     <div className="relative">
-                        {/* Progress Line Container */}
-                        <div className="absolute top-4 md:top-6 left-0 w-full h-1 md:h-2 z-10">
+                        {/* Progress Line Container - Fixed positioning */}
+                        <div className="absolute top-4 md:top-6 left-8 md:left-12 right-8 md:right-12 h-1 md:h-2 z-10">
                             <div className="flex justify-between items-center w-full h-full">
                                 {/* Main progress line background */}
-                                <div className="absolute top-0 left-8 md:left-12 right-8 md:right-12 h-full bg-gray-300 rounded-full"></div>
+                                <div className="absolute top-0 left-0 right-0 h-full bg-gray-300 rounded-full"></div>
                                 
                                 {/* Completed progress line */}
                                 {currentStatus !== 'cancelled' && (
                                     <div 
-                                        className="absolute top-0 left-8 md:left-12 h-full bg-green-500 rounded-full transition-all duration-500"
+                                        className="absolute top-0 left-0 h-full bg-green-500 rounded-full transition-all duration-500"
                                         style={{
                                             width: `${
                                                 currentStatus === 'booked' ? '0%' :
@@ -413,7 +377,7 @@ const HealthMonitor = () => {
                             {currentStatus === 'booked' && 'Please complete the payment to confirm your appointment.'}
                             {currentStatus === 'paid' && 'Your payment has been received. Please arrive 15 minutes before your scheduled time.'}
                             {currentStatus === 'medicine' && 'Your consultation is complete. Please collect your prescribed medicines.'}
-                            {currentStatus === 'completed' && 'Your appointment has been successfully completed. Thank you!'}
+                            {currentStatus === 'completed' && 'Your appointment has been successfully completed. Thank you for choosing our service!'}
                             {currentStatus === 'cancelled' && 'This appointment has been cancelled. You can book a new appointment if needed.'}
                         </p>
                     </div>
@@ -431,15 +395,15 @@ const HealthMonitor = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                 </svg>
                             </div>
-                            <h4 className="font-semibold text-gray-800 text-sm md:text-base">Payment</h4>
+                            <h4 className="font-semibold text-gray-800 text-sm md:text-base">Payment Status</h4>
                         </div>
                         <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
                             {currentAppointment?.paid ? 
-                                `Paid: ₹${currentAppointment.amount || 500}` : 
-                                'Payment pending'
+                                `Payment of ₹${currentAppointment.amount || 500} completed successfully` : 
+                                'Payment pending for appointment confirmation'
                             }
                         </p>
-                        {!currentAppointment?.paid && !currentAppointment?.cancelled && (
+                        {!currentAppointment?.paid && !currentAppointment?.cancelled && !currentAppointment?.isCompleted && (
                             <button 
                                 onClick={() => navigate('/myAppointments')}
                                 className="w-full bg-green-600 text-white py-2 px-3 rounded-lg text-xs md:text-sm font-medium hover:bg-green-700 transition-colors"
@@ -457,12 +421,13 @@ const HealthMonitor = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <h4 className="font-semibold text-gray-800 text-sm md:text-base">Details</h4>
+                            <h4 className="font-semibold text-gray-800 text-sm md:text-base">Appointment Details</h4>
                         </div>
                         <div className="space-y-1 md:space-y-2 text-xs md:text-sm text-gray-600">
                             <p><strong>Date:</strong> {currentAppointment.slotDate}</p>
                             <p><strong>Time:</strong> {currentAppointment.slotTime}</p>
                             <p><strong>Doctor:</strong> Dr. {currentAppointment.docData?.name}</p>
+                            <p><strong>Speciality:</strong> {currentAppointment.docData?.speciality || 'General Physician'}</p>
                         </div>
                     </div>
 
@@ -479,32 +444,54 @@ const HealthMonitor = () => {
                         <div className="space-y-1 md:space-y-2 text-xs md:text-sm text-gray-600">
                             {currentStatus === 'booked' && (
                                 <>
-                                    <p>• Complete payment</p>
-                                    <p>• Arrive early</p>
-                                    <p>• Bring ID card</p>
+                                    <p>• Complete payment to confirm appointment</p>
+                                    <p>• Arrive 15 minutes before scheduled time</p>
+                                    <p>• Bring your ID and previous medical reports</p>
                                 </>
                             )}
                             {currentStatus === 'paid' && (
                                 <>
-                                    <p>• Wait for turn</p>
-                                    <p>• Keep reports ready</p>
-                                    <p>• Meet doctor</p>
+                                    <p>• Wait for your turn in the waiting area</p>
+                                    <p>• Keep your medical reports ready</p>
+                                    <p>• Meet the doctor for consultation</p>
                                 </>
                             )}
                             {currentStatus === 'medicine' && (
                                 <>
-                                    <p>• Collect medicines</p>
-                                    <p>• Follow dosage</p>
-                                    <p>• Schedule follow-up</p>
+                                    <p>• Collect prescribed medicines from pharmacy</p>
+                                    <p>• Follow dosage instructions carefully</p>
+                                    <p>• Schedule follow-up if required</p>
                                 </>
                             )}
                             {currentStatus === 'completed' && (
                                 <>
-                                    <p>• Keep prescription</p>
-                                    <p>• Follow advice</p>
-                                    <p>• Provide feedback</p>
+                                    <p>• Keep prescription safe for future reference</p>
+                                    <p>• Follow doctor's advice and medication</p>
+                                    <p>• Provide feedback about your experience</p>
                                 </>
                             )}
+                            {currentStatus === 'cancelled' && (
+                                <>
+                                    <p>• This appointment has been cancelled</p>
+                                    <p>• Contact support for refund if applicable</p>
+                                    <p>• Book a new appointment if required</p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Additional Information */}
+                <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mt-4 md:mt-6">
+                    <h4 className="font-semibold text-gray-800 mb-3 md:mb-4 text-sm md:text-base">Need Help?</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm text-gray-600">
+                        <div>
+                            <p><strong>Contact Support:</strong> +1-234-567-890</p>
+                            <p><strong>Email:</strong> support@hospital.com</p>
+                        </div>
+                        <div>
+                            <p><strong>Hospital Address:</strong> 123 Medical Center, City</p>
+                            <p><strong>Emergency:</strong> Available 24/7</p>
                         </div>
                     </div>
                 </div>
