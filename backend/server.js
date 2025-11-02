@@ -7,6 +7,7 @@ import cloudinaryConnect from "./config/cloudinary.js";
 import adminRouter from "./routes/admin.routes.js";
 import routerDoctor from "./routes/doctor.routes.js";
 import routerUser from "./routes/user.routes.js";
+import feedbackRouter from "./routes/feedback.routes.js";
 import {mysqlPool} from "./config/mongodb.js";
 // config app
 const app=express();
@@ -18,6 +19,7 @@ const PORT=process.env.PORT || 4000;
 app.use("/api/admin",adminRouter);
 app.use("/api/doctor",routerDoctor);
 app.use("/api/user",routerUser);
+app.use("/api/feedback",feedbackRouter);
 app.use((err,req,res,next)=>{
     console.log("Error in the err:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ");
     console.log(err);

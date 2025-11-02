@@ -11,6 +11,14 @@ const HealthMonitor = () => {
     
     const [currentAppointment, setCurrentAppointment] = useState(appointment);
     const [currentStatus, setCurrentStatus] = useState(getInitialStatus(appointment));
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [feedbackData, setFeedbackData] = useState({
+        rating: 0,
+        comment: '',
+        wouldRecommend: null
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
 
     // Determine initial status based on appointment data
     function getInitialStatus(apt) {
@@ -22,13 +30,32 @@ const HealthMonitor = () => {
         return 'booked';
     }
 
+    // Check if feedback already exists for this appointment
+    const checkExistingFeedback = async () => {
+        if (!currentAppointment?._id || !aToken) return;
+        
+        try {
+            const response = await axios.get(
+                `https://arhospital.onrender.com/api/feedback/appointment/${currentAppointment._id}`,
+                { headers: { token: aToken } }
+            );
+            
+            if (response.data.success && response.data.exists) {
+                setHasSubmittedFeedback(true);
+            }
+        } catch (error) {
+            // If no feedback exists, it's fine - just keep hasSubmittedFeedback as false
+            console.log('No existing feedback found or error checking:', error);
+        }
+    };
+
     // Fetch updated appointment data
     const fetchAppointmentData = async () => {
         if (!currentAppointment?._id || !aToken) return;
         
         try {
             const { data } = await axios.get(
-                `http://localhost:4000/api/user/appointment/${currentAppointment._id}`,
+                `https://arhospital.onrender.com/api/user/appointment/${currentAppointment._id}`,
                 { headers: { token: aToken } }
             );
             
@@ -45,8 +72,94 @@ const HealthMonitor = () => {
     useEffect(() => {
         if (currentAppointment?._id) {
             fetchAppointmentData();
+            checkExistingFeedback();
         }
     }, [currentAppointment?._id]);
+
+    // Feedback Functions
+    const handleFeedbackClick = () => {
+        setShowFeedback(true);
+    };
+
+    const handleCloseFeedback = () => {
+        setShowFeedback(false);
+        setFeedbackData({
+            rating: 0,
+            comment: '',
+            wouldRecommend: null
+        });
+    };
+
+    const handleRatingChange = (rating) => {
+        setFeedbackData(prev => ({ ...prev, rating }));
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFeedbackData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleRecommendationChange = (value) => {
+        setFeedbackData(prev => ({ ...prev, wouldRecommend: value }));
+    };
+
+    const submitFeedback = async () => {
+        if (!feedbackData.rating) {
+            toast.error('Please provide a rating');
+            return;
+        }
+
+        if (!feedbackData.comment.trim()) {
+            toast.error('Please provide your feedback comments');
+            return;
+        }
+
+        if (feedbackData.wouldRecommend === null) {
+            toast.error('Please indicate if you would recommend this doctor');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const response = await axios.post(
+                'https://arhospital.onrender.com/api/feedback/submit',
+                {
+                    appointmentId: currentAppointment._id,
+                    doctorId: currentAppointment.docId,
+                    userId: currentAppointment.userId,
+                    rating: feedbackData.rating,
+                    comment: feedbackData.comment,
+                    wouldRecommend: feedbackData.wouldRecommend,
+                    doctorName: currentAppointment.docData?.name,
+                    userEmail: currentAppointment.userData?.email,
+                    userName: currentAppointment.userData?.name
+                },
+                { 
+                    headers: { 
+                        token: aToken,
+                        'Content-Type': 'application/json'
+                    } 
+                }
+            );
+
+            if (response.data.success) {
+                toast.success('Thank you for your feedback!');
+                setHasSubmittedFeedback(true);
+                handleCloseFeedback();
+            } else {
+                toast.error(response.data.message || 'Failed to submit feedback');
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            if (error.response && error.response.data) {
+                toast.error(error.response.data.message || 'Error submitting feedback');
+            } else {
+                toast.error('Network error. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     // Define the stages based on appointment status
     const getStages = () => {
@@ -228,8 +341,137 @@ const HealthMonitor = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 md:p-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 md:p-4 relative">
+            {/* Feedback Modal Overlay */}
+            {showFeedback && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all">
+                        {/* Modal Header */}
+                        <div className="bg-blue-600 text-white p-4 rounded-t-xl">
+                            <h3 className="text-xl font-bold">Share Your Experience</h3>
+                            <p className="text-blue-100 text-sm mt-1">
+                                Help us improve by providing feedback for Dr. {currentAppointment.docData?.name}
+                            </p>
+                        </div>
+                        
+                        {/* Modal Body */}
+                        <div className="p-6">
+                            {/* Rating Section */}
+                            <div className="mb-6">
+                                <label className="block text-gray-700 font-semibold mb-3">
+                                    Overall Rating *
+                                </label>
+                                <div className="flex justify-center space-x-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => handleRatingChange(star)}
+                                            className={`text-3xl transition-transform ${
+                                                star <= feedbackData.rating
+                                                    ? 'text-yellow-500 scale-110'
+                                                    : 'text-gray-300 hover:text-yellow-400'
+                                            }`}
+                                        >
+                                            ★
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="text-center text-sm text-gray-600 mt-2">
+                                    {feedbackData.rating === 0 && 'Select your rating'}
+                                    {feedbackData.rating === 1 && 'Poor'}
+                                    {feedbackData.rating === 2 && 'Fair'}
+                                    {feedbackData.rating === 3 && 'Good'}
+                                    {feedbackData.rating === 4 && 'Very Good'}
+                                    {feedbackData.rating === 5 && 'Excellent'}
+                                </div>
+                            </div>
+
+                            {/* Comment Section */}
+                            <div className="mb-6">
+                                <label className="block text-gray-700 font-semibold mb-2">
+                                    Your Feedback *
+                                </label>
+                                <textarea
+                                    name="comment"
+                                    value={feedbackData.comment}
+                                    onChange={handleInputChange}
+                                    placeholder="Share your experience with the doctor, treatment, and overall service..."
+                                    className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    maxLength={500}
+                                />
+                                <div className="text-right text-sm text-gray-500 mt-1">
+                                    {feedbackData.comment.length}/500
+                                </div>
+                            </div>
+
+                            {/* Recommendation Section */}
+                            <div className="mb-6">
+                                <label className="block text-gray-700 font-semibold mb-3">
+                                    Would you recommend Dr. {currentAppointment.docData?.name} to others? *
+                                </label>
+                                <div className="flex space-x-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRecommendationChange(true)}
+                                        className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                                            feedbackData.wouldRecommend === true
+                                                ? 'bg-green-100 border-green-500 text-green-700'
+                                                : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        👍 Yes
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRecommendationChange(false)}
+                                        className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                                            feedbackData.wouldRecommend === false
+                                                ? 'bg-red-100 border-red-500 text-red-700'
+                                                : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        👎 No
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={handleCloseFeedback}
+                                    disabled={isSubmitting}
+                                    className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-400 transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={submitFeedback}
+                                    disabled={isSubmitting}
+                                    className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Submitting...
+                                        </>
+                                    ) : (
+                                        'Submit Feedback'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content with conditional opacity */}
+            <div className={`max-w-6xl mx-auto transition-opacity duration-300 ${
+                showFeedback ? 'opacity-30 pointer-events-none' : 'opacity-100'
+            }`}>
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
                     <div className="text-center md:text-left">
@@ -310,7 +552,7 @@ const HealthMonitor = () => {
                                 {/* Completed progress line */}
                                 {currentStatus !== 'cancelled' && (
                                     <div 
-                                        className="absolute top-0 left-0 h-full bg-green-500 rounded-full transition-all duration-500"
+                                        className="absolute top-0 left-0 h-full bg-green-500 rounded-full transition-all duration-500 w-90"
                                         style={{
                                             width: `${
                                                 currentStatus === 'booked' ? '0%' :
@@ -359,7 +601,7 @@ const HealthMonitor = () => {
                     </div>
 
                     {/* Current Status Information */}
-                    <div className={`rounded-lg p-3 md:p-4 border-l-4 ${
+                    <div className={`rounded-lg p-3 md:p-4 border-l-4 mt-8 ${
                         currentStatus === 'booked' ? 'bg-yellow-50 border-yellow-400' :
                         currentStatus === 'paid' ? 'bg-blue-50 border-blue-400' :
                         currentStatus === 'medicine' ? 'bg-purple-50 border-purple-400' :
@@ -467,7 +709,25 @@ const HealthMonitor = () => {
                                 <>
                                     <p>• Keep prescription safe for future reference</p>
                                     <p>• Follow doctor's advice and medication</p>
-                                    <p>• Provide feedback about your experience</p>
+                                    <p>
+                                        {hasSubmittedFeedback ? (
+                                            // Show confirmation message after feedback is submitted
+                                            <span className="text-green-600 font-medium flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                                Thank you for your feedback!
+                                            </span>
+                                        ) : (
+                                            // Show feedback link if not submitted yet
+                                            <button 
+                                                onClick={handleFeedbackClick}
+                                                className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors"
+                                            >
+                                                Provide feedback about your experience
+                                            </button>
+                                        )}
+                                    </p>
                                 </>
                             )}
                             {currentStatus === 'cancelled' && (
