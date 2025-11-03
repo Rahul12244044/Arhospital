@@ -7,6 +7,7 @@ const DoctorContextProvider=(props)=>{
     const [appointments,setAppointments]=useState([]);
     const [dashData,setDashData]=useState(false);
     const [profileData,setProfileData]=useState(false);
+    const [doctorData, setDoctorData] = useState(null);
     const getAppointments=async ()=>{
         try{
             const {data}=await axios.get("https://arhospital.onrender.com/api/doctor/doctor-appointments",{headers:{dToken}});
@@ -72,8 +73,25 @@ const DoctorContextProvider=(props)=>{
             toast.error(err.message);
         }
     }
+    const getDoctorData = async () => {
+        try {
+            const {data} = await axios.get("https://arhospital.onrender.com/api/doctor/profile", {headers: {dToken}});
+            if(data.success){
+                setDoctorData(data.doctorData);
+                return data.doctorData;
+            } else {
+                toast.error(data.message);
+                return null;
+            }
+        } catch(err) {
+            toast.error(err.message);
+            return null;
+        }
+    }
 const value={
-    dToken,setdToken,appointments,setAppointments,getAppointments,completeAppointment,cancelAppointment,doctorDashboard,dashData,setDashData,profileData,setProfileData,doctorProfile
+    dToken,setdToken,appointments,setAppointments,getAppointments,completeAppointment,cancelAppointment,doctorDashboard,dashData,setDashData,profileData,setProfileData,doctorProfile,doctorData,
+        setDoctorData, 
+        getDoctorData 
 }
 return (
     <DoctorContext.Provider value={value}>
