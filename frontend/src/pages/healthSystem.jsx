@@ -709,23 +709,24 @@ const HealthMonitor = () => {
                                     <p>• Keep prescription safe for future reference</p>
                                     <p>• Follow doctor's advice and medication</p>
                                     <p>
-                                        {hasSubmittedFeedback ? (
-                                            // Show confirmation message after feedback is submitted
-                                            <span className="text-green-600 font-medium flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
-                                                Thank you for your feedback!
-                                            </span>
-                                        ) : (
-                                            // Show feedback link if not submitted yet
-                                            <button 
-                                                onClick={handleFeedbackClick}
-                                                className="text-blue-600 hover:text-blue-800 underline font-medium transition-colors"
-                                            >
-                                                Provide feedback about your experience
-                                            </button>
-                                        )}
+{hasSubmittedFeedback ? (
+                                    <span className="text-green-600 font-medium flex items-center gap-2 text-sm sm:text-base">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    Thank you for your feedback!
+                                    </span>
+                                    ) : (
+                                    <button 
+                                    onClick={handleFeedbackClick}
+                                    className="w-full sm:w-auto bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                                 >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
+                                    Provide Feedback
+                                    </button>
+                            )}
                                     </p>
                                 </>
                             )}
