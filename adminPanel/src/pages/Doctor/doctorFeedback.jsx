@@ -33,6 +33,9 @@ const DoctorFeedback = () => {
                 `https://arhospital.onrender.com/api/feedback/doctor/${currentDoctorData._id}`,
                 { headers: { token: dToken } }
             );
+            console.log("response: ");
+            console.log(response);
+            console.log(response.data);
             if (response.data.success) {
                 // Format feedbacks to ensure userName exists
                 const formattedFeedbacks = response.data.feedbacks.map(feedback => ({

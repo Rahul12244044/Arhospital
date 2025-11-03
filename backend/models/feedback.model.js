@@ -10,6 +10,7 @@ const feedbackSchema = new mongoose.Schema({
     wouldRecommend: { type: Boolean, required: true },
     doctorName: { type: String, required: true },
     userEmail: { type: String, required: true },
+    userName:{type:String,required:true},
     createdAt: { type: Date, default: Date.now }
 });
 
