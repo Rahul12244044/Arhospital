@@ -36,7 +36,7 @@ const HealthMonitor = () => {
         
         try {
             const response = await axios.get(
-                `https://arhospital.onrender.com/api/feedback/appointment/${currentAppointment._id}`,
+                `http://localhost:4000/api/feedback/appointment/${currentAppointment._id}`,
                 { headers: { token: aToken } }
             );
             
@@ -55,7 +55,7 @@ const HealthMonitor = () => {
         
         try {
             const { data } = await axios.get(
-                `https://arhospital.onrender.com/api/user/appointment/${currentAppointment._id}`,
+                `http://localhost:4000/api/user/appointment/${currentAppointment._id}`,
                 { headers: { token: aToken } }
             );
             
@@ -122,7 +122,7 @@ const HealthMonitor = () => {
         setIsSubmitting(true);
         try {
             const response = await axios.post(
-                'https://arhospital.onrender.com/api/feedback/submit',
+                'http://localhost:4000/api/feedback/submit',
                 {
                     appointmentId: currentAppointment._id,
                     doctorId: currentAppointment.docId,
@@ -131,8 +131,7 @@ const HealthMonitor = () => {
                     comment: feedbackData.comment,
                     wouldRecommend: feedbackData.wouldRecommend,
                     doctorName: currentAppointment.docData?.name,
-                    userEmail: currentAppointment.userData?.email,
-                    userName: currentAppointment.userData?.name
+                    userEmail: currentAppointment.userData?.email
                 },
                 { 
                     headers: { 
