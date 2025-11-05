@@ -1,42 +1,99 @@
-import React,{useContext,useState,useEffect} from 'react';
-import {AppContext} from "../context/AppContext";
-import {useNavigate} from "react-router-dom";
-const RelatedDoctors = ({docId,speciality}) => {
-    const {doctors}=useContext(AppContext);
-    const [relDoctors,setRelDoctors]=useState([]);
-    const navigate=useNavigate();
-    useEffect(()=>{
-        if(doctors.length>0 && speciality){
-            setRelDoctors(doctors.filter((elm)=>{
-                return elm.speciality===speciality && elm.id!=docId;
-            }));
+import React, { useContext, useState, useEffect } from 'react';
+import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
+
+const RelatedDoctors = ({ docId, speciality }) => {
+    const { doctors } = useContext(AppContext);
+    const [relDoctors, setRelDoctors] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (doctors.length > 0 && speciality) {
+            const filtered = doctors.filter((elm) => {
+                return elm.speciality === speciality && elm._id !== docId;
+            });
+            setRelDoctors(filtered.slice(0, 4)); // Show max 4 related doctors
         }
-    },[doctors,docId,speciality]);
+    }, [doctors, docId, speciality]);
+
+    const handleDoctorClick = (doctorId) => {
+        navigate(`/appointment/${doctorId}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleViewAll = () => {
+        navigate("/doctors");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (relDoctors.length === 0) {
+        return null; // Don't render if no related doctors
+    }
+
     return (
-        <div className="flex flex-col items-center gap-4 my-16 text-gray-900 md:mx-10 ">
-            <h1 className="text-3xl font-medium text-gray-900">Related Doctors</h1>
-            <p className="md:w-1/3 text-sm text-center">Simply browse through our extensive list of trusted doctors</p>
-            <div className={`w-full gap-4 gap-y-6 px-3 sm:px-0 
-                    ${relDoctors.length === 1
-                        ? "w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6 justify-start"
-                        : "w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 gap-y-6 justify-start"}`}>
-                {relDoctors.slice(0,5).map((elm,index)=>{
-                    return (<>
-                    <div onClick={()=>{navigate(`/appointment/${elm._id}`);scrollTo(0,0);}} className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
-                        <img className="bg-blue-50" src={elm.image}/>
-                    <div className="p-4">
-                    <div className={`flex items-center gap-2 text-sm text-center ${elm.available?"text-green-600":"text-red-600"}`}>
-                        <p className={`w-2 h-2 ${elm.available?"bg-green-600":"bg-red-500"} rounded-full`}></p><p>{elm.available?"Available":"Not Available"}</p>
-                    </div>
-                    <p className="text-gray-900 text-lg font-medium">{elm.name}</p>
-                    <p className="text-gray-600 text-sm">{elm.speciality}</p>
-                    </div>
-                    </div>
-                    </>)
-                })}
+        <section className="py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-200">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                        Other {speciality} Specialists
+                    </h2>
+                   
+                </div>
+
+                {/* Doctors Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    {relDoctors.map((doctor, index) => (
+                        <div 
+                            key={doctor._id}
+                            onClick={() => handleDoctorClick(doctor._id)}
+                            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                        >
+                            {/* Doctor Image */}
+                            <div className="relative overflow-hidden h-58">
+                                <img 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    src={doctor.image} 
+                                    alt={doctor.name}
+                                    onError={(e) => {
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=6366f1&color=fff&size=300`;
+                                    }}
+                                />
+                                {/* Availability Badge */}
+                                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ${
+                                    doctor.available 
+                                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                                        : 'bg-red-100 text-red-800 border border-red-200'
+                                }`}>
+                                    {doctor.available ? 'Available' : 'Unavailable'}
+                                </div>
+                            </div>
+
+                            {/* Doctor Info */}
+                            <div className="p-6">
+                                <div className="mb-3">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
+                                        {doctor.name}
+                                    </h3>
+                                    <p className="text-blue-600 font-medium text-sm">
+                                        {doctor.speciality}
+                                    </p>
+                                </div>
+
+                                {/* Availability Status */}
+                               
+
+                                {/* CTA Button */}
+                               
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* View All Button */}
+               
             </div>
-            <button onClick={()=>{navigate("/doctors"),scrollTo(0,0)}} className="bg-blue-50 text-gray-600 px-12 py-3 rounded-full mt-10 cursor-pointer">more</button>
-        </div>
+        </section>
     );
 };
 
